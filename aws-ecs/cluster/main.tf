@@ -17,6 +17,8 @@ module "vpc" {
   cidr           = local.vpc_cidr_block
   azs            = local.azs
   public_subnets = local.az_cidr_blocks
+
+  enable_dns_hostnames = true
 }
 
 # Create an ECS cluster with an ASG-based capacity provider

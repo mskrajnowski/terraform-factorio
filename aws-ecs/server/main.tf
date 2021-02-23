@@ -34,6 +34,43 @@ resource "aws_cloudwatch_log_group" "server" {
   retention_in_days = 7
 }
 
+# Create an IAM role for the service
+
+data "aws_iam_policy_document" "server_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "server" {
+  name = var.name
+  tags = var.tags
+
+  assume_role_policy = data.aws_iam_policy_document.server_assume_role.json
+}
+
+data "aws_iam_policy_document" "server_seed" {
+  count = var.seed_save != null ? 1 : 0
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["arn:aws:s3:::${var.seed_save.bucket}/${var.seed_save.key}"]
+  }
+}
+
+resource "aws_iam_role_policy" "server_seed" {
+  count = var.seed_save != null ? 1 : 0
+
+  role   = aws_iam_role.server.name
+  name   = "seed"
+  policy = data.aws_iam_policy_document.server_seed[0].json
+}
+
 # Create the ECS task definition for the server
 
 resource "random_password" "rcon" {
@@ -48,6 +85,7 @@ locals {
   seed_environment = var.seed_save != null ? {
     SEED_BUCKET = var.seed_save.bucket
     SEED_KEY    = var.seed_save.key
+    SEED_RESET  = var.reset_save ? "true" : ""
   } : {}
 
   server_environment = {
@@ -58,6 +96,7 @@ locals {
     FACTORIO_SERVER_ADMINS    = jsonencode(var.admins)
     FACTORIO_SERVER_WHITELIST = jsonencode(var.allowed_players)
     FACTORIO_SERVER_BANLIST   = jsonencode(var.banned_players)
+    FACTORIO_SERVER_RESET     = var.reset_save ? "true" : ""
     FACTORIO_SERVER_SEED      = var.seed_save == null ? "" : "true"
   }
 }
@@ -66,6 +105,7 @@ resource "aws_ecs_task_definition" "server" {
   family                   = var.name
   tags                     = var.tags
   requires_compatibilities = ["EC2"]
+  task_role_arn            = aws_iam_role.server.arn
 
   container_definitions = jsonencode(concat([
     {
@@ -89,7 +129,7 @@ resource "aws_ecs_task_definition" "server" {
         "bash", "-c", <<-EOT
           set -e
 
-          # configure the server
+          echo "Configuring the server..."
           mkdir -p "$CONFIG"
           echo -n "$FACTORIO_SERVER_SETTINGS" > "$CONFIG/server-settings.json"
           echo -n "$FACTORIO_SERVER_ADMINS" > "$CONFIG/server-adminlist.json"
@@ -97,17 +137,23 @@ resource "aws_ecs_task_definition" "server" {
           echo -n "$FACTORIO_SERVER_BANLIST" > "$CONFIG/server-banlist.json"
           echo -n "$FACTORIO_SERVER_RCON_PASSWORD" > "$CONFIG/rconpw"
 
-          # setup saves and mods directories
-          mkdir -p "$SAVES" "$MODS"
-
-          # wait for the seed save to be downloaded
-          if [[ -n "$FACTORIO_SERVER_SEED" ]]; then
-            while [[ "$(find -L "$SAVES" -iname \*.zip -mindepth 1 | wc -l)" == 0 ]]; do
-              sleep 1
-            done
+          if [[ -n "$FACTORIO_SERVER_RESET" ]]; then
+            echo "Deleting existing saves..."
+            rm -rf "$SAVES"
           fi
 
-          chown -R 845:845 /factorio
+          echo "Creating saves and mods directories..."
+          mkdir -p "$SAVES" "$MODS"
+
+          if [[ -n "$FACTORIO_SERVER_SEED" ]]; then
+            while [[ "$(find -L "$SAVES" -iname \*.zip -mindepth 1 | wc -l)" == 0 ]]; do
+              echo "Waiting for the seed save..."
+              sleep 1
+            done
+            echo "Save found"
+          fi
+
+          echo "Launching factorio server..."
           exec /docker-entrypoint.sh
         EOT
       ]
@@ -126,30 +172,40 @@ resource "aws_ecs_task_definition" "server" {
       }
     }
     ], var.seed_save != null ? [{
-      name      = "seed",
-      image     = "amazon/aws-cli:2.1.27"
-      essential = false
+      name              = "seed",
+      image             = "amazon/aws-cli:2.1.27"
+      essential         = false
+      memoryReservation = 64
 
       environment = [
         for name, value in local.seed_environment :
         { name = name, value = value }
       ]
 
-      entryPoint = []
+      entryPoint = ["bash", "-c"]
       command = [
-        "bash", "-c", <<-EOT
+        <<-EOT
           set -e
 
           SAVES=/factorio/saves
           MODS=/factorio/mods
 
+          if [[ -n "$SEED_RESET" ]]; then
+            echo "Deleting existing saves..."
+            rm -rf "$SAVES"
+          fi
+
           mkdir -p "$SAVES" "$MODS"
 
           if [[ "$(find -L "$SAVES" -iname \*.zip -mindepth 1 | wc -l)" == 0 ]]; then
+            echo "Downloading the seed save '$SEED_BUCKET/$SEED_KEY'..."
             aws s3api get-object \
               --bucket "$SEED_BUCKET" \
               --key "$SEED_KEY" \
               "$SAVES/_autosave1.zip"
+            echo "Seed save downloaded as '$SAVES/_autosave1.zip'"
+          else
+            echo "A save already exists, skipping seed save"
           fi
         EOT
       ]

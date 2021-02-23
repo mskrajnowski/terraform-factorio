@@ -21,6 +21,18 @@ resource "aws_security_group_rule" "host_server_port" {
   to_port           = 34197
 }
 
+resource "aws_s3_bucket" "seeds" {
+  bucket = "terraform-factorio-aws-ecs-example-seeds"
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_object" "seed_save" {
+  bucket = aws_s3_bucket.seeds.bucket
+  key    = "save.zip"
+  source = "${path.module}/save.zip"
+  etag   = filemd5("${path.module}/save.zip")
+}
+
 module "server" {
   source = "../server"
 
@@ -35,6 +47,7 @@ module "server" {
   settings        = { name = "Example Server" }
   admins          = ["mskrajnowski"]
   allowed_players = ["mskrajnowski"]
+  seed_save       = aws_s3_bucket_object.seed_save
 }
 
 output "server" {

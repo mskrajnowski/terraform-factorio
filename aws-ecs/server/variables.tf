@@ -54,11 +54,17 @@ variable "seed_save" {
   default     = null
 }
 
+variable "reset_save" {
+  type        = bool
+  description = "Whether to delete all saves and create a new one"
+  default     = false
+}
+
 variable "rcon_password" {
   type        = string
   description = "RCON password"
   default     = null
-  sensitive = true
+  sensitive   = true
 }
 
 variable "cluster_name" {

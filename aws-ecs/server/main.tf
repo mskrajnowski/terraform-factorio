@@ -101,77 +101,80 @@ locals {
   }
 }
 
+data "aws_region" "current" {}
+
 resource "aws_ecs_task_definition" "server" {
   family                   = var.name
   tags                     = var.tags
   requires_compatibilities = ["EC2"]
   task_role_arn            = aws_iam_role.server.arn
 
-  container_definitions = jsonencode(concat([
-    {
-      name              = "factorio"
-      image             = "factoriotools/factorio:${var.factorio_version}"
-      essential         = true
-      memoryReservation = 512
-      cpu               = 512
+  container_definitions = jsonencode(concat(
+    [
+      {
+        name              = "factorio"
+        image             = "factoriotools/factorio:${var.factorio_version}"
+        essential         = true
+        memoryReservation = 512
 
-      portMappings = [
-        { protocol = "udp", containerPort = 34197, hostPort = var.host_port },
-        { protocol = "tcp", containerPort = 27015, hostPort = var.host_rcon_port }
-      ]
+        portMappings = [
+          { protocol = "udp", containerPort = 34197, hostPort = var.host_port },
+          { protocol = "tcp", containerPort = 27015, hostPort = var.host_rcon_port }
+        ]
 
-      environment = [
-        for name, value in local.server_environment :
-        { name = name, value = value }
-      ]
+        environment = [
+          for name, value in local.server_environment :
+          { name = name, value = value }
+        ]
 
-      entryPoint = [
-        "bash", "-c", <<-EOT
-          set -e
+        entryPoint = [
+          "bash", "-c", <<-EOT
+            set -e
 
-          echo "Configuring the server..."
-          mkdir -p "$CONFIG"
-          echo -n "$FACTORIO_SERVER_SETTINGS" > "$CONFIG/server-settings.json"
-          echo -n "$FACTORIO_SERVER_ADMINS" > "$CONFIG/server-adminlist.json"
-          echo -n "$FACTORIO_SERVER_WHITELIST" > "$CONFIG/server-whitelist.json"
-          echo -n "$FACTORIO_SERVER_BANLIST" > "$CONFIG/server-banlist.json"
-          echo -n "$FACTORIO_SERVER_RCON_PASSWORD" > "$CONFIG/rconpw"
+            echo "Configuring the server..."
+            mkdir -p "$CONFIG"
+            echo -n "$FACTORIO_SERVER_SETTINGS" > "$CONFIG/server-settings.json"
+            echo -n "$FACTORIO_SERVER_ADMINS" > "$CONFIG/server-adminlist.json"
+            echo -n "$FACTORIO_SERVER_WHITELIST" > "$CONFIG/server-whitelist.json"
+            echo -n "$FACTORIO_SERVER_BANLIST" > "$CONFIG/server-banlist.json"
+            echo -n "$FACTORIO_SERVER_RCON_PASSWORD" > "$CONFIG/rconpw"
 
-          if [[ -n "$FACTORIO_SERVER_RESET" ]]; then
-            echo "Deleting existing saves..."
-            rm -rf "$SAVES"
-          fi
+            if [[ -n "$FACTORIO_SERVER_RESET" ]]; then
+              echo "Deleting existing saves..."
+              rm -rf "$SAVES"
+            fi
 
-          echo "Creating saves and mods directories..."
-          mkdir -p "$SAVES" "$MODS"
+            echo "Creating saves and mods directories..."
+            mkdir -p "$SAVES" "$MODS"
 
-          if [[ -n "$FACTORIO_SERVER_SEED" ]]; then
-            while [[ "$(find -L "$SAVES" -iname \*.zip -mindepth 1 | wc -l)" == 0 ]]; do
-              echo "Waiting for the seed save..."
-              sleep 1
-            done
-            echo "Save found"
-          fi
+            if [[ -n "$FACTORIO_SERVER_SEED" ]]; then
+              while [[ "$(find -L "$SAVES" -iname \*.zip -mindepth 1 | wc -l)" == 0 ]]; do
+                echo "Waiting for the seed save..."
+                sleep 1
+              done
+              echo "Save found"
+            fi
 
-          echo "Launching factorio server..."
-          exec /docker-entrypoint.sh
-        EOT
-      ]
+            echo "Launching factorio server..."
+            exec /docker-entrypoint.sh
+          EOT
+        ]
 
-      mountPoints = [
-        { sourceVolume = "data", containerPath = "/factorio" }
-      ]
+        mountPoints = [
+          { sourceVolume = "data", containerPath = "/factorio" }
+        ]
 
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.server.name,
-          "awslogs-region"        = "eu-central-1",
-          "awslogs-stream-prefix" = "ecs"
+        logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            "awslogs-group"         = aws_cloudwatch_log_group.server.name,
+            "awslogs-region"        = data.aws_region.current.name,
+            "awslogs-stream-prefix" = "ecs"
+          }
         }
       }
-    }
-    ], var.seed_save != null ? [{
+    ],
+    var.seed_save != null ? [{
       name              = "seed",
       image             = "amazon/aws-cli:2.1.27"
       essential         = false
@@ -218,11 +221,12 @@ resource "aws_ecs_task_definition" "server" {
         logDriver = "awslogs",
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.server.name,
-          "awslogs-region"        = "eu-central-1",
+          "awslogs-region"        = data.aws_region.current.name,
           "awslogs-stream-prefix" = "ecs"
         }
       }
-  }] : []))
+    }] : []
+  ))
 
   volume {
     name = "data"

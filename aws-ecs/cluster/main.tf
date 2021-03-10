@@ -154,8 +154,10 @@ resource "aws_security_group_rule" "host_out_any" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
+data "aws_region" "current" {}
+
 data "aws_ip_ranges" "ec2_connect" {
-  regions  = ["eu-central-1"]
+  regions  = [data.aws_region.current.name]
   services = ["ec2_instance_connect"]
 }
 

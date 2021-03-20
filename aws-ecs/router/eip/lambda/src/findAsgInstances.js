@@ -19,7 +19,10 @@ async function findAsgInstances(options) {
 
   const { Reservations: ec2Reservations = [] } = await ec2Client
     .describeInstances({
-      Filters: [{ Name: "tag:aws:autoscaling:groupName", Values: [asgName] }],
+      Filters: [
+        { Name: "tag:aws:autoscaling:groupName", Values: [asgName] },
+        { Name: "instance-state-name", Values: ["running"] },
+      ],
     })
     .promise();
 

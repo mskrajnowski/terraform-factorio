@@ -1,0 +1,13 @@
+{
+  "name": "router-discovery",
+  "private": true,
+  "main": "index.js",
+  "author": "Marek Skrajnowski",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "2.867.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.35"
+  }
+}

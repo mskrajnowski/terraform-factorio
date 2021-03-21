@@ -7,19 +7,15 @@ output "eip_id" {
 }
 
 output "security_group_id" {
-  value = module.instance.security_group_id
+  value = aws_security_group.this.id
 }
 
 output "role_name" {
-  value = module.instance.role_name
+  value = aws_iam_role.this.name
 }
 
 output "role_arn" {
-  value = module.instance.role_arn
-}
-
-output "instance_user_data" {
-  value = module.instance.user_data
+  value = aws_iam_role.this.arn
 }
 
 output "config_param_name" {

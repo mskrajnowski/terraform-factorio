@@ -1,0 +1,7 @@
+#!/bin/bash
+
+aws ssm get-parameter \
+  --name '${config_param_name}' \
+  --query 'Parameter.Value' \
+  --output text \
+| /opt/ecs-router/update-iptables

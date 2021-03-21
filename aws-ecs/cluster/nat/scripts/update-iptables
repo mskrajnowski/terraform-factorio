@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 echo >&2 "Fetching router private ip"
 router_ip=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)

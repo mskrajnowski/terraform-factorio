@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -ex
+
+yum install -y ec2-instance-connect jq
+
+# install aws cli 2
+# https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
+cd /tmp
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+./aws/install
+rm -rf awscliv2.zip aws
+
+aws --version
+
+# setup NAT
+cat >/etc/sysctl.d/50-port-forwarding.conf <<'EOF'
+net.ipv4.ip_forward=1
+net.ipv4.conf.eth0.send_redirects = 0
+EOF
+sysctl -p
+sysctl --system
+
+iptables \
+  --table nat \
+  --append POSTROUTING \
+  --out-interface eth0 \
+  --jump MASQUERADE
+
+# install /opt/ecs-router scripts
+mkdir -p /opt/ecs-router
+cd /opt/ecs-router
+
+cat >update-iptables <<'EOF'
+${scripts.update_iptables}
+EOF
+
+cat >update <<'EOF'
+${scripts.update}
+EOF
+
+chmod +x update-iptables update

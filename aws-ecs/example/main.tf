@@ -33,13 +33,13 @@ module "server" {
 
   name = "${local.name}-server"
 
-  cluster_name             = module.cluster.name
-  vpc_id                   = module.cluster.vpc_id
-  host_subnet_ids          = module.cluster.instance_subnet_ids
-  host_security_group_id   = module.cluster.instance_security_group_id
-  router_port              = 34197
-  router_rcon_port         = 27015
-  router_security_group_id = module.cluster.nat_security_group_id
+  cluster_name           = module.cluster.name
+  vpc_id                 = module.cluster.vpc_id
+  host_subnet_ids        = module.cluster.instance_subnet_ids
+  host_security_group_id = module.cluster.instance_security_group_id
+  nat_port               = 34197
+  nat_rcon_port          = 27015
+  nat_security_group_id  = module.cluster.nat_security_group_id
 
   settings        = { name = "Example Server" }
   admins          = ["mskrajnowski"]

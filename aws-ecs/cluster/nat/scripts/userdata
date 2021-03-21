@@ -28,9 +28,9 @@ iptables \
   --out-interface eth0 \
   --jump MASQUERADE
 
-# install /opt/ecs-router scripts
-mkdir -p /opt/ecs-router
-cd /opt/ecs-router
+# install /opt/terraform-factorio/nat scripts
+mkdir -p /opt/terraform-factorio/nat
+cd /opt/terraform-factorio/nat
 
 cat >update-iptables <<'EOF'
 ${scripts.update_iptables}

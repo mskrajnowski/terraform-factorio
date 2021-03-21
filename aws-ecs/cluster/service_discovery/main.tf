@@ -57,8 +57,8 @@ module "lambda" {
   timeout      = 30
 
   environment_variables = {
-    CLUSTER             = var.cluster_name
-    ROUTER_CONFIG_PARAM = var.nat_config_param_name
+    CLUSTER          = var.cluster_name
+    NAT_CONFIG_PARAM = var.nat_config_param_name
   }
 
   policy_arns = { self = aws_iam_policy.lambda.arn }

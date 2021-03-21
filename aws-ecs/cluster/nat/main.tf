@@ -191,8 +191,8 @@ module "setup_lambda" {
   timeout      = 30
 
   environment_variables = {
-    ROUTER_EIP_ID   = aws_eip.this.id
-    ROUTER_ASG      = aws_autoscaling_group.this.name
+    NAT_EIP_ID      = aws_eip.this.id
+    NAT_ASG         = aws_autoscaling_group.this.name
     ROUTE_TABLE_IDS = join(",", var.private_route_table_ids)
   }
 

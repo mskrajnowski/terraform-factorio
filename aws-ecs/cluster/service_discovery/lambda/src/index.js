@@ -3,7 +3,7 @@ const Ec2Client = require("aws-sdk/clients/ec2");
 const SsmClient = require("aws-sdk/clients/ssm");
 
 const discoverRoutes = require("./discoverRoutes");
-const updateRouterConfig = require("./updateRouterConfig");
+const updateNatConfig = require("./updateNatConfig");
 
 module.exports = { handler };
 
@@ -13,7 +13,7 @@ if (require.main === module) {
 
 async function handler() {
   const clusterName = process.env.CLUSTER || "";
-  const routerConfigParamName = process.env.ROUTER_CONFIG_PARAM || "";
+  const natConfigParamName = process.env.NAT_CONFIG_PARAM || "";
 
   const ecsClient = new EcsClient();
   const ec2Client = new Ec2Client();
@@ -25,9 +25,9 @@ async function handler() {
     ec2Client,
   });
 
-  await updateRouterConfig({
+  await updateNatConfig({
     routes,
-    paramName: routerConfigParamName,
+    paramName: natConfigParamName,
     ssmClient,
   });
 }

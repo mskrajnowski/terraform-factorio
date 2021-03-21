@@ -179,14 +179,14 @@ resource "aws_ecs_task_definition" "server" {
               {
                 protocol      = "udp",
                 containerPort = 34197,
-                natPort       = var.router_port,
+                natPort       = var.nat_port,
               }
             ],
-            var.router_rcon_port == null ? [] : [
+            var.nat_rcon_port == null ? [] : [
               {
                 protocol      = "tcp",
                 containerPort = 27015,
-                natPort       = var.router_rcon_port,
+                natPort       = var.nat_rcon_port,
               }
             ]
           ))
@@ -271,21 +271,21 @@ resource "aws_ecs_service" "server" {
   deployment_minimum_healthy_percent = 0
 }
 
-resource "aws_security_group_rule" "router_in" {
-  security_group_id = var.router_security_group_id
+resource "aws_security_group_rule" "nat_in" {
+  security_group_id = var.nat_security_group_id
   type              = "ingress"
   protocol          = "udp"
-  from_port         = var.router_port
-  to_port           = var.router_port
+  from_port         = var.nat_port
+  to_port           = var.nat_port
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_rule" "router_in_rcon" {
-  count             = var.router_rcon_port != null ? 1 : 0
-  security_group_id = var.router_security_group_id
+resource "aws_security_group_rule" "nat_in_rcon" {
+  count             = var.nat_rcon_port != null ? 1 : 0
+  security_group_id = var.nat_security_group_id
   type              = "ingress"
   protocol          = "tcp"
-  from_port         = var.router_rcon_port
-  to_port           = var.router_rcon_port
+  from_port         = var.nat_rcon_port
+  to_port           = var.nat_rcon_port
   cidr_blocks       = ["0.0.0.0/0"]
 }

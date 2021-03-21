@@ -1,5 +1,5 @@
 {
-  "name": "router-discovery",
+  "name": "terraform-factorio-service-discovery",
   "private": true,
   "main": "index.js",
   "author": "Marek Skrajnowski",

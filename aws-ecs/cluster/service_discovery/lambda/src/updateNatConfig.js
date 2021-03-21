@@ -1,21 +1,21 @@
 /** @typedef {import("aws-sdk/clients/ssm")} SsmClient */
 /** @typedef {import("./discoverRoutes").Route} Route */
 
-module.exports = updateRouterConfig;
+module.exports = updateNatConfig;
 
 /**
- * @typedef {Object} UpdateRouterConfigOptions
+ * @typedef {Object} UpdateNatConfigOptions
  * @property {Route[]} routes
  * @property {string} paramName
  * @property {SsmClient} ssmClient
  */
 
 /**
- * @param {UpdateRouterConfigOptions} options
+ * @param {UpdateNatConfigOptions} options
  * @returns {Promise<void>}
  */
 
-async function updateRouterConfig(options) {
+async function updateNatConfig(options) {
   const { routes, paramName, ssmClient } = options;
 
   const routesJson = JSON.stringify(routes, null, 2);

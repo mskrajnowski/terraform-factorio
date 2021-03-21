@@ -82,19 +82,19 @@ variable "host_security_group_id" {
   description = "ECS instances security group id"
 }
 
-variable "router_security_group_id" {
+variable "nat_security_group_id" {
   type        = string
-  description = "Router security group to add ingress rules to"
+  description = "NAT instance security group to add ingress rules to"
 }
 
-variable "router_port" {
+variable "nat_port" {
   type        = number
-  description = "Port on the router to expose the server's main UDP port"
+  description = "Port on the NAT instance to expose the server's main UDP port"
 }
 
-variable "router_rcon_port" {
+variable "nat_rcon_port" {
   type        = number
-  description = "Port on the router to expose the server's RCON TCP port"
+  description = "Port on the NAT instance to expose the server's RCON TCP port"
   default     = null
 }
 

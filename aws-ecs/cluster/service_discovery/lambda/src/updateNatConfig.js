@@ -23,6 +23,15 @@ async function updateNatConfig(options) {
   console.log(`Writing configuration to ${paramName} parameter...`);
   console.log(routesJson);
 
+  const { Parameter: currentParam } = await ssmClient
+    .getParameter({ Name: paramName })
+    .promise();
+
+  if (currentParam && currentParam.Value === routesJson) {
+    console.log("Configuration didn't change, skipping write.");
+    return;
+  }
+
   await ssmClient
     .putParameter({
       Name: paramName,

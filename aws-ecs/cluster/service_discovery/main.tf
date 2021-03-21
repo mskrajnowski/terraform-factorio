@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "lambda" {
 
   # https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssystemsmanager.html
   statement {
-    actions   = ["ssm:PutParameter"]
+    actions   = ["ssm:GetParameter", "ssm:PutParameter"]
     resources = ["arn:*:ssm:*:*:parameter/${var.nat_config_param_name}"]
   }
 }

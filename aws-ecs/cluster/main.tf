@@ -50,8 +50,18 @@ module "nat" {
   subnet_ids              = module.vpc.public_subnets
   private_route_table_ids = module.vpc.private_route_table_ids
   cluster_name            = aws_ecs_cluster.this.name
-  cluster_arn             = aws_ecs_cluster.this.arn
 }
+
+module "service_discovery" {
+  source = "./service_discovery"
+
+  name = "${var.name}-service-discovery"
+  tags = var.tags
+
+  cluster_name          = aws_ecs_cluster.this.name
+  nat_config_param_name = module.nat.config_param_name
+}
+
 
 module "instances" {
   source = "./instances"

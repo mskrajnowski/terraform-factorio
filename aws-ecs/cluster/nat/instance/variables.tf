@@ -21,4 +21,3 @@ variable "instance_type" {
 }
 
 variable "config_param_name" { type = string }
-variable "config_param_arn" { type = string }

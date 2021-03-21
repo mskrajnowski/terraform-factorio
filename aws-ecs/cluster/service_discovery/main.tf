@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "lambda" {
     condition {
       test     = "StringEquals"
       variable = "ecs:cluster"
-      values   = [var.cluster_arn]
+      values   = ["arn:*:ecs:*:*:cluster/${var.cluster_name}"]
     }
   }
 
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "lambda" {
   # https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssystemsmanager.html
   statement {
     actions   = ["ssm:PutParameter"]
-    resources = [var.config_param_arn]
+    resources = ["arn:*:ssm:*:*:parameter/${var.nat_config_param_name}"]
   }
 }
 
@@ -58,7 +58,7 @@ module "lambda" {
 
   environment_variables = {
     CLUSTER             = var.cluster_name
-    ROUTER_CONFIG_PARAM = var.config_param_name
+    ROUTER_CONFIG_PARAM = var.nat_config_param_name
   }
 
   policy_arns = { self = aws_iam_policy.lambda.arn }

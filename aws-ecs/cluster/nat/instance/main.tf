@@ -168,7 +168,7 @@ resource "aws_iam_instance_profile" "router" {
 data "aws_iam_policy_document" "router_config" {
   statement {
     actions   = ["ssm:GetParameter"]
-    resources = [var.config_param_arn]
+    resources = ["arn:*:ssm:*:*:parameter/${var.config_param_name}"]
   }
 }
 

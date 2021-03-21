@@ -21,3 +21,7 @@ output "role_arn" {
 output "instance_user_data" {
   value = module.instance.user_data
 }
+
+output "config_param_name" {
+  value = aws_ssm_parameter.config.name
+}

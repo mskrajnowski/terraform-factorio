@@ -8,7 +8,4 @@ variable "tags" {
 }
 
 variable "cluster_name" { type = string }
-variable "cluster_arn" { type = string }
-
-variable "config_param_name" { type = string }
-variable "config_param_arn" { type = string }
+variable "nat_config_param_name" { type = string }

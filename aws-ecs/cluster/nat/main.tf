@@ -19,7 +19,6 @@ module "instance" {
   instance_type = var.instance_type
 
   config_param_name = aws_ssm_parameter.config.name
-  config_param_arn  = aws_ssm_parameter.config.arn
 }
 
 module "eip" {
@@ -31,16 +30,4 @@ module "eip" {
   asg_name = module.instance.asg_name
 
   private_route_table_ids = var.private_route_table_ids
-}
-
-module "discovery" {
-  source = "./discovery"
-
-  name = "${var.name}-discovery"
-  tags = var.tags
-
-  cluster_name      = var.cluster_name
-  cluster_arn       = var.cluster_arn
-  config_param_name = aws_ssm_parameter.config.name
-  config_param_arn  = aws_ssm_parameter.config.arn
 }

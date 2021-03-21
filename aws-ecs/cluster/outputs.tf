@@ -1,3 +1,11 @@
+output "name" {
+  value = aws_ecs_cluster.this.name
+}
+
+output "arn" {
+  value = aws_ecs_cluster.this.arn
+}
+
 output "vpc_id" {
   value = module.vpc.vpc_id
 }
@@ -14,26 +22,18 @@ output "public_subnet_ids" {
   value = module.vpc.public_subnets
 }
 
-output "host_subnet_ids" {
-  value = aws_autoscaling_group.spot.vpc_zone_identifier
+output "instance_asg_id" {
+  value = module.instances.asg_id
 }
 
-output "name" {
-  value = aws_ecs_cluster.cluster.name
+output "instances_asg_arn" {
+  value = module.instances.asg_arn
 }
 
-output "arn" {
-  value = aws_ecs_cluster.cluster.arn
+output "instance_subnet_ids" {
+  value = module.instances.subnet_ids
 }
 
-output "host_asg_id" {
-  value = aws_autoscaling_group.spot.id
-}
-
-output "host_asg_arn" {
-  value = aws_autoscaling_group.spot.arn
-}
-
-output "host_security_group_id" {
-  value = aws_security_group.host.id
+output "instance_security_group_id" {
+  value = module.instances.security_group_id
 }

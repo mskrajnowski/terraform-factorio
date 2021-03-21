@@ -25,7 +25,7 @@ module "router" {
   subnet_ids              = module.cluster.public_subnet_ids
   cluster_name            = module.cluster.name
   cluster_arn             = module.cluster.arn
-  host_security_group_id  = module.cluster.host_security_group_id
+  host_security_group_id  = module.cluster.instance_security_group_id
   private_route_table_ids = module.cluster.private_route_table_ids
 }
 
@@ -52,8 +52,8 @@ module "server" {
 
   cluster_name             = module.cluster.name
   vpc_id                   = module.cluster.vpc_id
-  host_subnet_ids          = module.cluster.host_subnet_ids
-  host_security_group_id   = module.cluster.host_security_group_id
+  host_subnet_ids          = module.cluster.instance_subnet_ids
+  host_security_group_id   = module.cluster.instance_security_group_id
   router_port              = 34197
   router_rcon_port         = 27015
   router_security_group_id = module.router.security_group_id

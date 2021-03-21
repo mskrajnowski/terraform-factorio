@@ -23,6 +23,19 @@ data "aws_iam_policy_document" "lambda" {
   }
 
   statement {
+    actions   = ["ec2:ModifyInstanceAttribute"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = ["ec2:CreateRoute", "ec2:ReplaceRoute"]
+    resources = concat(
+      [for id in var.private_route_table_ids : "arn:*:ec2:*:*:route-table/${id}"],
+      ["arn:*:ec2:*:*:instance/*"]
+    )
+  }
+
+  statement {
     actions   = ["ec2:DescribeInstances"]
     resources = ["*"]
   }
@@ -40,10 +53,12 @@ module "lambda" {
   package_path = module.lambda_package.output_path
   runtime      = "nodejs14.x"
   handler      = "index.handler"
+  timeout      = 30
 
   environment_variables = {
-    ROUTER_EIP_ID = aws_eip.router.id
-    ROUTER_ASG    = var.asg_name
+    ROUTER_EIP_ID   = aws_eip.router.id
+    ROUTER_ASG      = var.asg_name
+    ROUTE_TABLE_IDS = join(",", var.private_route_table_ids)
   }
 
   policy_arns = { self = aws_iam_policy.lambda.arn }

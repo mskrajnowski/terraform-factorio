@@ -16,7 +16,7 @@ for route in $( jq -c '.[]' ); do
   echo >&2 "Parsing route $route"
   route_vars=$(echo -n "$route" | jq -r '@sh "
     protocol=\(.protocol)
-    router_port=\(.routerPort)
+    router_port=\(.natPort)
     host_ip=\(.hostIp)
     host_port=\(.hostPort)
   "')

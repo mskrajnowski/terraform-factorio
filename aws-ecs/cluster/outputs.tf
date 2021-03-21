@@ -22,6 +22,14 @@ output "public_subnet_ids" {
   value = module.vpc.public_subnets
 }
 
+output "nat_security_group_id" {
+  value = module.nat.security_group_id
+}
+
+output "nat_ip" {
+  value = module.nat.ip
+}
+
 output "instance_asg_id" {
   value = module.instances.asg_id
 }

@@ -123,23 +123,7 @@ resource "aws_security_group_rule" "router_out_any" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_rule" "router_in_host" {
-  security_group_id        = aws_security_group.router.id
-  source_security_group_id = var.host_security_group_id
-  type                     = "ingress"
-  protocol                 = -1
-  from_port                = 0
-  to_port                  = 0
-}
 
-resource "aws_security_group_rule" "host_in_router" {
-  security_group_id        = var.host_security_group_id
-  source_security_group_id = aws_security_group.router.id
-  type                     = "ingress"
-  protocol                 = -1
-  from_port                = 0
-  to_port                  = 0
-}
 
 data "aws_region" "current" {}
 

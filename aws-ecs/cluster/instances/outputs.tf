@@ -15,5 +15,5 @@ output "security_group_id" {
 }
 
 output "subnet_ids" {
-  value = aws_autoscaling_group.this.vpc_zone_identifier
+  value = var.subnet_ids
 }

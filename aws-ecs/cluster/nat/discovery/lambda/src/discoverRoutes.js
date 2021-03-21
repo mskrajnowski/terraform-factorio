@@ -12,13 +12,13 @@ module.exports = discoverRoutes;
  * @typedef {Object} LabelRoute
  * @property {RouteProtocol} protocol,
  * @property {number} containerPort
- * @property {number} routerPort,
+ * @property {number} natPort,
  */
 
 /**
  * @typedef {Object} Route
  * @property {RouteProtocol} protocol,
- * @property {number} routerPort,
+ * @property {number} natPort,
  * @property {string} hostIp
  * @property {number} hostPort
  */
@@ -86,9 +86,9 @@ async function discoverRoutes(options) {
       const { dockerLabels = {} } = containerDefinitionsMap[name];
 
       /** @type {LabelRoute[]} */
-      const forward = JSON.parse(dockerLabels["router.forward"] || "[]");
+      const forward = JSON.parse(dockerLabels["nat.forward"] || "[]");
 
-      forward.forEach(({ protocol, containerPort, routerPort }) => {
+      forward.forEach(({ protocol, containerPort, natPort }) => {
         const binding = networkBindings.find(
           (binding) =>
             binding.protocol === protocol &&
@@ -100,7 +100,7 @@ async function discoverRoutes(options) {
         if (instancePort) {
           routes.push({
             protocol,
-            routerPort,
+            natPort,
             hostIp: instanceIp,
             hostPort: instancePort,
           });
@@ -109,9 +109,9 @@ async function discoverRoutes(options) {
     });
 
     console.log(`Found ${routes.length} routes:`);
-    routes.forEach(({ protocol, routerPort, hostIp, hostPort }) =>
+    routes.forEach(({ protocol, natPort, hostIp, hostPort }) =>
       console.log(
-        `:${routerPort}/${protocol} -> ${hostIp}:${hostPort}/${protocol}`
+        `:${natPort}/${protocol} -> ${hostIp}:${hostPort}/${protocol}`
       )
     );
 

@@ -12,12 +12,11 @@ resource "aws_ssm_parameter" "config" {
 module "instance" {
   source = "./instance"
 
-  name                   = var.name
-  tags                   = var.tags
-  host_security_group_id = var.host_security_group_id
-  vpc_id                 = var.vpc_id
-  subnet_ids             = var.subnet_ids
-  instance_type          = var.instance_type
+  name          = var.name
+  tags          = var.tags
+  vpc_id        = var.vpc_id
+  subnet_ids    = var.subnet_ids
+  instance_type = var.instance_type
 
   config_param_name = aws_ssm_parameter.config.name
   config_param_arn  = aws_ssm_parameter.config.arn

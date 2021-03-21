@@ -16,23 +16,6 @@ output "cluster" {
   value = module.cluster
 }
 
-module "router" {
-  source = "../router"
-
-  name = "${local.name}-router"
-
-  vpc_id                  = module.cluster.vpc_id
-  subnet_ids              = module.cluster.public_subnet_ids
-  cluster_name            = module.cluster.name
-  cluster_arn             = module.cluster.arn
-  host_security_group_id  = module.cluster.instance_security_group_id
-  private_route_table_ids = module.cluster.private_route_table_ids
-}
-
-output "router" {
-  value = module.router
-}
-
 resource "aws_s3_bucket" "seeds" {
   bucket = "${local.name}-seeds"
   acl    = "private"
@@ -56,7 +39,7 @@ module "server" {
   host_security_group_id   = module.cluster.instance_security_group_id
   router_port              = 34197
   router_rcon_port         = 27015
-  router_security_group_id = module.router.security_group_id
+  router_security_group_id = module.cluster.nat_security_group_id
 
   settings        = { name = "Example Server" }
   admins          = ["mskrajnowski"]
@@ -65,11 +48,11 @@ module "server" {
 }
 
 output "server_address" {
-  value = "${module.router.ip}:34197"
+  value = "${module.cluster.nat_ip}:34197"
 }
 
 output "server_rcon_address" {
-  value = "${module.router.ip}:27015"
+  value = "${module.cluster.nat_ip}:27015"
 }
 
 output "server" {

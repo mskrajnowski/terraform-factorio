@@ -118,8 +118,8 @@ resource "aws_ecs_task_definition" "server" {
         memoryReservation = 512
 
         portMappings = [
-          { protocol = "udp", containerPort = 34197, hostPort = var.host_port },
-          { protocol = "tcp", containerPort = 27015, hostPort = var.host_rcon_port }
+          { protocol = "udp", containerPort = 34197 },
+          { protocol = "tcp", containerPort = 27015 },
         ]
 
         environment = [
@@ -174,19 +174,19 @@ resource "aws_ecs_task_definition" "server" {
         }
 
         dockerLabels = {
-          "router.forward" = jsonencode(concat(
-            var.router_port == null ? [] : [
+          "nat.forward" = jsonencode(concat(
+            [
               {
                 protocol      = "udp",
                 containerPort = 34197,
-                routerPort    = var.router_port,
+                natPort       = var.router_port,
               }
             ],
             var.router_rcon_port == null ? [] : [
               {
                 protocol      = "tcp",
                 containerPort = 27015,
-                routerPort    = var.router_rcon_port,
+                natPort       = var.router_rcon_port,
               }
             ]
           ))
@@ -272,7 +272,6 @@ resource "aws_ecs_service" "server" {
 }
 
 resource "aws_security_group_rule" "router_in" {
-  count             = var.router_security_group_id != null && var.router_port != null ? 1 : 0
   security_group_id = var.router_security_group_id
   type              = "ingress"
   protocol          = "udp"
@@ -282,7 +281,7 @@ resource "aws_security_group_rule" "router_in" {
 }
 
 resource "aws_security_group_rule" "router_in_rcon" {
-  count             = var.router_security_group_id != null && var.router_rcon_port != null ? 1 : 0
+  count             = var.router_rcon_port != null ? 1 : 0
   security_group_id = var.router_security_group_id
   type              = "ingress"
   protocol          = "tcp"

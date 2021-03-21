@@ -1,5 +1,4 @@
 # Create a vpc with public networks in 2 availability zones
-
 data "aws_availability_zones" "default" {}
 
 locals {
@@ -26,10 +25,10 @@ module "vpc" {
 }
 
 # Create an ECS cluster with an ASG-based capacity provider
-
 resource "aws_ecs_cluster" "this" {
   name = var.name
   tags = var.tags
+
   setting {
     name  = "containerInsights"
     value = "disabled"
@@ -40,6 +39,18 @@ resource "aws_ecs_cluster" "this" {
   default_capacity_provider_strategy {
     capacity_provider = module.instances.capacity_provider_name
   }
+}
+
+module "nat" {
+  source = "./nat"
+
+  name = "${var.name}-nat"
+
+  vpc_id                  = module.vpc.vpc_id
+  subnet_ids              = module.vpc.public_subnets
+  private_route_table_ids = module.vpc.private_route_table_ids
+  cluster_name            = aws_ecs_cluster.this.name
+  cluster_arn             = aws_ecs_cluster.this.arn
 }
 
 module "instances" {
@@ -54,4 +65,23 @@ module "instances" {
   cluster_name = var.name
   vpc_id       = module.vpc.vpc_id
   subnet_ids   = module.vpc.private_subnets
+}
+
+# Allow NAT and instances to talk to each other
+resource "aws_security_group_rule" "nat_in_instance" {
+  security_group_id        = module.nat.security_group_id
+  source_security_group_id = module.instances.security_group_id
+  type                     = "ingress"
+  protocol                 = -1
+  from_port                = 0
+  to_port                  = 0
+}
+
+resource "aws_security_group_rule" "instance_in_nat" {
+  security_group_id        = module.instances.security_group_id
+  source_security_group_id = module.nat.security_group_id
+  type                     = "ingress"
+  protocol                 = -1
+  from_port                = 0
+  to_port                  = 0
 }

@@ -7,10 +7,6 @@ variable "tags" {
   default = {}
 }
 
-variable "host_security_group_id" {
-  type = string
-}
-
 variable "vpc_id" {
   type = string
 }

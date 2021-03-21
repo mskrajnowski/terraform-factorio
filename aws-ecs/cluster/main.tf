@@ -59,6 +59,7 @@ module "service_discovery" {
   tags = var.tags
 
   cluster_name          = aws_ecs_cluster.this.name
+  cluster_arn           = aws_ecs_cluster.this.arn
   nat_config_param_name = module.nat.config_param_name
 }
 

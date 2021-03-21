@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "lambda" {
     condition {
       test     = "StringEquals"
       variable = "ecs:cluster"
-      values   = ["arn:*:ecs:*:*:cluster/${var.cluster_name}"]
+      values   = [var.cluster_arn]
     }
   }
 
@@ -64,3 +64,29 @@ module "lambda" {
   policy_arns = { self = aws_iam_policy.lambda.arn }
 }
 
+# Launch lambda function when ECS task state changes
+resource "aws_cloudwatch_event_rule" "task_state_changed" {
+  name = var.name
+
+  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/CloudWatchEventsandEventPatterns.html
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html
+  event_pattern = jsonencode({
+    source      = ["aws.ecs"],
+    detail-type = ["ECS Task State Change"],
+    detail = {
+      clusterArn = [var.cluster_arn]
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "lambda" {
+  arn  = module.lambda.arn
+  rule = aws_cloudwatch_event_rule.task_state_changed.id
+}
+
+resource "aws_lambda_permission" "task_state_changed" {
+  function_name = module.lambda.name
+  action        = "lambda:InvokeFunction"
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.task_state_changed.arn
+}

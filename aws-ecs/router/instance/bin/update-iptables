@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -ex
+
+echo >&2 "Fetching router private ip"
+router_ip=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+echo >&2 "Router private ip: $router_ip"
+
+echo >&2 "Current port forwarding rules:"
+sudo iptables --table nat --list PREROUTING --numeric
+
+echo >&2 "Clearing port forwarding rules"
+sudo iptables --table nat --flush PREROUTING
+
+for route in $( jq -c '.[]' ); do
+  echo >&2 "Parsing route $route"
+  route_vars=$(echo -n "$route" | jq -r '@sh "
+    protocol=\(.protocol)
+    router_port=\(.routerPort)
+    host_ip=\(.hostIp)
+    host_port=\(.hostPort)
+  "')
+  eval "$route_vars"
+
+  route_string="$router_ip:$router_port/$protocol -> $host_ip:$host_port/$protocol"
+  echo >&2 "Adding route $route_string"
+
+  # router -> host
+  sudo iptables \
+    --table nat \
+    --append PREROUTING \
+    --in-interface eth0 \
+    --protocol $protocol \
+    --destination $router_ip --dport $router_port \
+    --jump DNAT --to-destination $host_ip:$host_port
+
+  echo >&2 "Added route $route_string"
+done
+
+echo >&2 "Port forwarding rules updated"
+sudo iptables --table nat --list PREROUTING --numeric

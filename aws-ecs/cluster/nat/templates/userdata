@@ -32,12 +32,19 @@ iptables \
 mkdir -p /opt/terraform-factorio/nat
 cd /opt/terraform-factorio/nat
 
-cat >update-iptables <<'EOF'
-${scripts.update_iptables}
+cat >update-routes <<'EOF'
+${files.update_routes}
 EOF
 
 cat >update <<'EOF'
-${scripts.update}
+${files.update}
 EOF
 
-chmod +x update-iptables update
+cat >nat-rules-update.service <<'EOF'
+${files.update_service}
+EOF
+
+chmod +x update-routes update
+
+systemctl enable /opt/terraform-factorio/nat/nat-rules-update.service
+systemctl start nat-rules-update

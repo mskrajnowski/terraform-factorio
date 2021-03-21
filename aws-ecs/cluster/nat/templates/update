@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+
+queue_url='${queue_url}'
+
+/opt/terraform-factorio/nat/update-routes
+
+while true; do
+  echo >&2 "Waiting for config changes..."
+
+  receipt_handles=$(
+    aws sqs receive-message \
+    --queue-url "$queue_url" \
+    --max-number-of-messages 10 \
+    --wait-time-seconds 20 \
+    --query 'Messages[].ReceiptHandle' \
+    --output text
+  )
+
+  if [ "$receipt_handles" != "None" ]; then
+    echo >&2 "Config changed, updating routes..."
+
+    /opt/terraform-factorio/nat/update-routes
+
+    for receipt_handle in $receipt_handles; do
+      aws sqs delete-message \
+        --queue-url "$queue_url" \
+        --receipt-handle "$receipt_handle"
+    done
+  fi
+done

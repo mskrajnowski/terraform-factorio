@@ -1,0 +1,19 @@
+[Unit]
+Description=Keeps the NAT port forwarding rules up to date
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+ExecStart=/opt/terraform-factorio/nat/update
+WorkingDirectory=/opt/terraform-factorio/nat
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=%n
+
+[Install]
+WantedBy=multi-user.target

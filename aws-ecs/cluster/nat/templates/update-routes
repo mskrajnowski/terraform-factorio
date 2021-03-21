@@ -12,7 +12,15 @@ sudo iptables --table nat --list PREROUTING --numeric
 echo >&2 "Clearing port forwarding rules"
 sudo iptables --table nat --flush PREROUTING
 
-for route in $( jq -c '.[]' ); do
+get-routes () {
+  aws ssm get-parameter \
+    --name '${config_param_name}' \
+    --query 'Parameter.Value' \
+    --output text \
+  | jq -c '.[]'
+}
+
+for route in $( get-routes ); do
   echo >&2 "Parsing route $route"
   route_vars=$(echo -n "$route" | jq -r '@sh "
     protocol=\(.protocol)

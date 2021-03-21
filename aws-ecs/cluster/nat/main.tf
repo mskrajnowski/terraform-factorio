@@ -136,10 +136,15 @@ resource "aws_launch_template" "this" {
   vpc_security_group_ids = [aws_security_group.this.id]
 
   user_data = base64encode(
-    templatefile("${path.module}/scripts/userdata", {
-      scripts = {
-        update_iptables = file("${path.module}/scripts/update-iptables"),
-        update          = templatefile("${path.module}/scripts/update", { config_param_name = aws_ssm_parameter.config.name })
+    templatefile("${path.module}/templates/userdata", {
+      files = {
+        update = templatefile("${path.module}/templates/update", {
+          queue_url = aws_sqs_queue.config_changes.id
+        })
+        update_routes = templatefile("${path.module}/templates/update-routes", {
+          config_param_name = aws_ssm_parameter.config.name
+        }),
+        update_service = templatefile("${path.module}/templates/update.service", {})
       }
     })
   )
@@ -203,17 +208,22 @@ resource "aws_iam_instance_profile" "this" {
   role = aws_iam_role.this.name
 }
 
-data "aws_iam_policy_document" "get_config" {
+data "aws_iam_policy_document" "this" {
   statement {
     actions   = ["ssm:GetParameter"]
     resources = ["arn:*:ssm:*:*:parameter/${aws_ssm_parameter.config.name}"]
   }
+
+  statement {
+    actions   = ["sqs:ReceiveMessage", "sqs:DeleteMessage"]
+    resources = [aws_sqs_queue.config_changes.arn]
+  }
 }
 
-resource "aws_iam_role_policy" "get_config" {
+resource "aws_iam_role_policy" "this" {
   role   = aws_iam_role.this.name
-  name   = "get-config"
-  policy = data.aws_iam_policy_document.get_config.json
+  name   = "self"
+  policy = data.aws_iam_policy_document.this.json
 }
 
 # Create a lambda which will setup any started NAT instances

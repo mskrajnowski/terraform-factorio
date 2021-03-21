@@ -1,9 +1,9 @@
 output "ip" {
-  value = module.eip.ip
+  value = aws_eip.this.public_ip
 }
 
 output "eip_id" {
-  value = module.eip.id
+  value = aws_eip.this.id
 }
 
 output "security_group_id" {

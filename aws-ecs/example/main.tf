@@ -12,10 +12,6 @@ module "cluster" {
   name = local.name
 }
 
-output "cluster" {
-  value = module.cluster
-}
-
 resource "aws_s3_bucket" "seeds" {
   bucket = "${local.name}-seeds"
   acl    = "private"
@@ -31,16 +27,10 @@ resource "aws_s3_bucket_object" "seed_save" {
 module "server" {
   source = "../server"
 
-  name = "${local.name}-server"
-
-  cluster_name           = module.cluster.name
-  vpc_id                 = module.cluster.vpc_id
-  host_subnet_ids        = module.cluster.instance_subnet_ids
-  host_security_group_id = module.cluster.instance_security_group_id
-  nat_port               = 34197
-  nat_rcon_port          = 27015
-  nat_security_group_id  = module.cluster.nat_security_group_id
-
+  name            = "${local.name}-server"
+  cluster         = module.cluster
+  nat_port        = 34197
+  nat_rcon_port   = 27015
   settings        = { name = "Example Server" }
   admins          = ["mskrajnowski"]
   allowed_players = ["mskrajnowski"]
@@ -48,11 +38,11 @@ module "server" {
 }
 
 output "server_address" {
-  value = "${module.cluster.nat_ip}:${module.server.nat_port}"
+  value = module.server.address
 }
 
 output "server_rcon_address" {
-  value = "${module.cluster.nat_ip}:${module.server.nat_rcon_port}"
+  value = module.server.rcon_address
 }
 
 output "server_rcon_password" {

@@ -2,12 +2,12 @@
 resource "aws_security_group" "data" {
   name   = "${var.name}-data"
   tags   = var.tags
-  vpc_id = var.vpc_id
+  vpc_id = var.cluster.vpc_id
 }
 
 resource "aws_security_group_rule" "data_in_host" {
   security_group_id        = aws_security_group.data.id
-  source_security_group_id = var.host_security_group_id
+  source_security_group_id = var.cluster.instance_security_group_id
   type                     = "ingress"
   protocol                 = "tcp"
   from_port                = 2049
@@ -20,10 +20,10 @@ resource "aws_efs_file_system" "data" {
 }
 
 resource "aws_efs_mount_target" "data" {
-  count = length(var.host_subnet_ids)
+  count = length(var.cluster.instance_subnet_ids)
 
   file_system_id  = aws_efs_file_system.data.id
-  subnet_id       = var.host_subnet_ids[count.index]
+  subnet_id       = var.cluster.instance_subnet_ids[count.index]
   security_groups = [aws_security_group.data.id]
 }
 
@@ -264,7 +264,7 @@ resource "aws_ecs_service" "server" {
   tags = var.tags
 
   task_definition                    = aws_ecs_task_definition.server.arn
-  cluster                            = var.cluster_name
+  cluster                            = var.cluster.name
   desired_count                      = 1
   launch_type                        = "EC2"
   propagate_tags                     = "SERVICE"
@@ -272,7 +272,7 @@ resource "aws_ecs_service" "server" {
 }
 
 resource "aws_security_group_rule" "nat_in" {
-  security_group_id = var.nat_security_group_id
+  security_group_id = var.cluster.nat_security_group_id
   type              = "ingress"
   protocol          = "udp"
   from_port         = var.nat_port
@@ -282,7 +282,7 @@ resource "aws_security_group_rule" "nat_in" {
 
 resource "aws_security_group_rule" "nat_in_rcon" {
   count             = var.nat_rcon_port != null ? 1 : 0
-  security_group_id = var.nat_security_group_id
+  security_group_id = var.cluster.nat_security_group_id
   type              = "ingress"
   protocol          = "tcp"
   from_port         = var.nat_rcon_port

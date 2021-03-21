@@ -67,26 +67,6 @@ variable "rcon_password" {
   sensitive   = true
 }
 
-variable "cluster_name" {
-  type        = string
-  description = "ECS cluster name"
-}
-
-variable "host_subnet_ids" {
-  type        = list(string)
-  description = "Cluster host subnet ids"
-}
-
-variable "host_security_group_id" {
-  type        = string
-  description = "ECS instances security group id"
-}
-
-variable "nat_security_group_id" {
-  type        = string
-  description = "NAT instance security group to add ingress rules to"
-}
-
 variable "nat_port" {
   type        = number
   description = "Port on the NAT instance to expose the server's main UDP port"
@@ -98,7 +78,14 @@ variable "nat_rcon_port" {
   default     = null
 }
 
-variable "vpc_id" {
-  type        = string
-  description = "Cluster VPC id"
+variable "cluster" {
+  type = object({
+    name                       = string
+    instance_subnet_ids        = list(string)
+    instance_security_group_id = string
+    nat_security_group_id      = string
+    nat_ip                     = string
+    vpc_id                     = string
+  })
+  description = "Cluster to create the server in"
 }

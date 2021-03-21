@@ -48,14 +48,14 @@ module "server" {
 }
 
 output "server_address" {
-  value = "${module.cluster.nat_ip}:34197"
+  value = "${module.cluster.nat_ip}:${module.server.nat_port}"
 }
 
 output "server_rcon_address" {
-  value = "${module.cluster.nat_ip}:27015"
+  value = "${module.cluster.nat_ip}:${module.server.nat_rcon_port}"
 }
 
-output "server" {
-  value     = module.server
+output "server_rcon_password" {
+  value     = module.server.rcon_password
   sensitive = true
 }

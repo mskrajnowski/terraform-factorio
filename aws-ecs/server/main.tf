@@ -172,6 +172,25 @@ resource "aws_ecs_task_definition" "server" {
             "awslogs-stream-prefix" = "ecs"
           }
         }
+
+        dockerLabels = {
+          "router.forward" = jsonencode(concat(
+            var.router_port == null ? [] : [
+              {
+                protocol      = "udp",
+                containerPort = 34197,
+                routerPort    = var.router_port,
+              }
+            ],
+            var.router_rcon_port == null ? [] : [
+              {
+                protocol      = "tcp",
+                containerPort = 27015,
+                routerPort    = var.router_rcon_port,
+              }
+            ]
+          ))
+        }
       }
     ],
     var.seed_save != null ? [{
@@ -250,4 +269,24 @@ resource "aws_ecs_service" "server" {
   launch_type                        = "EC2"
   propagate_tags                     = "SERVICE"
   deployment_minimum_healthy_percent = 0
+}
+
+resource "aws_security_group_rule" "router_in" {
+  count             = var.router_security_group_id != null && var.router_port != null ? 1 : 0
+  security_group_id = var.router_security_group_id
+  type              = "ingress"
+  protocol          = "udp"
+  from_port         = var.router_port
+  to_port           = var.router_port
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "router_in_rcon" {
+  count             = var.router_security_group_id != null && var.router_rcon_port != null ? 1 : 0
+  security_group_id = var.router_security_group_id
+  type              = "ingress"
+  protocol          = "tcp"
+  from_port         = var.router_rcon_port
+  to_port           = var.router_rcon_port
+  cidr_blocks       = ["0.0.0.0/0"]
 }

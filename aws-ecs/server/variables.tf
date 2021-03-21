@@ -94,6 +94,24 @@ variable "host_rcon_port" {
   default     = null
 }
 
+variable "router_port" {
+  type        = number
+  description = "Port on the router to expose the server's main UDP port"
+  default     = null
+}
+
+variable "router_rcon_port" {
+  type        = number
+  description = "Port on the router to expose the server's RCON TCP port"
+  default     = null
+}
+
+variable "router_security_group_id" {
+  type        = string
+  description = "Router security group to add ingress rules to"
+  default     = null
+}
+
 variable "vpc_id" {
   type        = string
   description = "Cluster VPC id"

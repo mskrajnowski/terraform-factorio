@@ -198,3 +198,28 @@ module "setup_lambda" {
 
   policy_arns = { self = aws_iam_policy.setup_lambda.arn }
 }
+
+# Launch setup lambda function when a NAT instance is launched
+resource "aws_cloudwatch_event_rule" "launched" {
+  name = "${var.name}-launched"
+
+  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/CloudWatchEventsandEventPatterns.html
+  # https://docs.aws.amazon.com/autoscaling/ec2/userguide/cloud-watch-events.html#cloudwatch-event-types
+  event_pattern = jsonencode({
+    source      = ["aws.autoscaling"],
+    detail-type = ["EC2 Instance Launch Successful"],
+    resources   = [aws_autoscaling_group.this.arn],
+  })
+}
+
+resource "aws_cloudwatch_event_target" "setup" {
+  arn  = module.setup_lambda.arn
+  rule = aws_cloudwatch_event_rule.launched.id
+}
+
+resource "aws_lambda_permission" "setup" {
+  function_name = module.setup_lambda.name
+  action        = "lambda:InvokeFunction"
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.launched.arn
+}

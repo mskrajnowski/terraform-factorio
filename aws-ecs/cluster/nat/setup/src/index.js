@@ -11,29 +11,38 @@ if (require.main === module) {
   handler();
 }
 
-async function handler() {
+/**
+ * @param {{detail?: {EC2InstanceId?: string}}} [event={}]
+ */
+async function handler(event) {
   const natIpId = process.env.NAT_EIP_ID || "";
   const natAsgName = process.env.NAT_ASG || "";
   const privateRouteTableIds = (process.env.ROUTE_TABLE_IDS || "").split(",");
 
   const ec2Client = new Ec2Client();
 
-  console.log(
-    `Searching for an instance in ${natAsgName} autoscaling group...`
-  );
-  const [instance] = await findAsgInstances({
-    asgName: natAsgName,
-    ec2Client,
-  });
+  /** @type {string} */
+  let instanceId;
 
-  if (!instance) {
-    console.log("No running instances found.");
-    return;
+  if (event && event.detail && event.detail.EC2InstanceId) {
+    instanceId = event.detail.EC2InstanceId;
+  } else {
+    console.log(
+      `Searching for an instance in ${natAsgName} autoscaling group...`
+    );
+    const [instance] = await findAsgInstances({
+      asgName: natAsgName,
+      ec2Client,
+    });
+
+    if (!instance || !instance.InstanceId) {
+      console.log("No running instances found.");
+      return;
+    }
+
+    instanceId = instance.InstanceId;
+    console.log(`Found instance: ${instanceId}.`);
   }
-
-  const instanceId = instance.InstanceId || "";
-
-  console.log(`Found instance: ${instanceId}.`);
 
   console.log(`Assigning elastic IP ${natIpId} to ${instanceId}...`);
   await assignIp({ eipId: natIpId, instanceId, ec2Client });

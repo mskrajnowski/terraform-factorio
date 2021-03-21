@@ -3,9 +3,11 @@
 data "aws_availability_zones" "default" {}
 
 locals {
-  vpc_cidr_block = "10.0.0.0/16"
-  azs            = slice(data.aws_availability_zones.default.names, 0, 2)
-  az_cidr_blocks = cidrsubnets(local.vpc_cidr_block, 1, 1)
+  vpc_cidr_block      = "10.0.0.0/16"
+  azs                 = slice(data.aws_availability_zones.default.names, 0, 2)
+  subnet_cidr_blocks  = cidrsubnets(local.vpc_cidr_block, 4, 4, 8, 8)
+  private_cidr_blocks = slice(local.subnet_cidr_blocks, 0, 2)
+  public_cidr_blocks  = slice(local.subnet_cidr_blocks, 2, 4)
 }
 
 module "vpc" {
@@ -14,11 +16,13 @@ module "vpc" {
   name = var.name
   tags = var.tags
 
-  cidr           = local.vpc_cidr_block
-  azs            = local.azs
-  public_subnets = local.az_cidr_blocks
+  cidr            = local.vpc_cidr_block
+  azs             = local.azs
+  private_subnets = local.private_cidr_blocks
+  public_subnets  = local.public_cidr_blocks
 
   enable_dns_hostnames = true
+  enable_nat_gateway   = false
 }
 
 # Create an ECS cluster with an ASG-based capacity provider
@@ -79,7 +83,7 @@ resource "aws_autoscaling_group" "spot" {
   desired_capacity = 0
   max_size         = 1
 
-  vpc_zone_identifier   = module.vpc.public_subnets
+  vpc_zone_identifier   = module.vpc.private_subnets
   protect_from_scale_in = true
 
   launch_template {

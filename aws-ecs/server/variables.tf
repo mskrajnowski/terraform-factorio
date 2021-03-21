@@ -72,6 +72,11 @@ variable "cluster_name" {
   description = "ECS cluster name"
 }
 
+variable "host_subnet_ids" {
+  type        = list(string)
+  description = "Cluster host subnet ids"
+}
+
 variable "host_security_group_id" {
   type        = string
   description = "ECS instances security group id"
@@ -94,7 +99,4 @@ variable "vpc_id" {
   description = "Cluster VPC id"
 }
 
-variable "subnet_ids" {
-  type        = list(string)
-  description = "Cluster subnet ids"
-}
+

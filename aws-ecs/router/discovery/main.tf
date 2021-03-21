@@ -54,6 +54,7 @@ module "lambda" {
   package_path = module.lambda_package.output_path
   runtime      = "nodejs14.x"
   handler      = "index.handler"
+  timeout      = 30
 
   environment_variables = {
     CLUSTER             = var.cluster_name

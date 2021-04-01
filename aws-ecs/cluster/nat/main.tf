@@ -152,6 +152,10 @@ resource "aws_launch_template" "this" {
   iam_instance_profile {
     arn = aws_iam_instance_profile.this.arn
   }
+
+  instance_market_options {
+    market_type = "spot"
+  }
 }
 
 resource "aws_security_group" "this" {

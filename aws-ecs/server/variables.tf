@@ -18,7 +18,7 @@ variable "start" {
 variable "factorio_version" {
   type        = string
   description = "Factorio server version"
-  default     = "1.1.27"
+  default     = "1.1.30"
 }
 
 variable "settings" {
